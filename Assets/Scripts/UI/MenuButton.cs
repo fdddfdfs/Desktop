@@ -2,7 +2,6 @@
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 namespace UI
 {
@@ -27,9 +26,14 @@ namespace UI
 
         private void Awake()
         {
-            if (_button == null)
+            if (!_button)
             {
                 _button = GetComponent<RectTransform>();
+
+                if (!_button)
+                {
+                    throw new Exception("Cannot find RectTransform component");
+                }
             }
 
             _startPosition = _button.transform.localPosition;
@@ -37,8 +41,6 @@ namespace UI
 
         private void IncreaseSize()
         {
-            float currentSize = _button.rect.width;
-
             _button.DOKill();
             _button.DOScale(ScaleFactor, ScaleDuration);
             _button.DOLocalMove(_startPosition * ScaleFactor, ScaleDuration);

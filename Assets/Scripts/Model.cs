@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 public class Model : IUpdatable
 {
     private const float Speed = 0.001f;
+    private const float MinimumScale = 0.1f;
     
     private readonly Camera _camera;
     private readonly LayerMask _raycastMask;
@@ -45,6 +46,13 @@ public class Model : IUpdatable
     public void ChangeModel(ModelData newModel)
     {
         ModelView newModelView = _models[newModel];
+
+        if (newModelView == _currentModel)
+        {
+            Debug.LogWarning("Trying to change model to same model");
+            return;
+        }
+        
         newModelView.ChangeActive(true);
         newModelView.transform.position = _currentModel.transform.position;
         newModelView.transform.localScale = _currentModel.transform.localScale;
@@ -62,7 +70,7 @@ public class Model : IUpdatable
 
         float scrollDeltaY = _scroll.ReadValue<Vector2>().y;
 
-        if (scrollDeltaY != 0)
+        if (scrollDeltaY != 0 && IsMouseOnModel())
         {
             ChangeScale(scrollDeltaY);
         }
@@ -71,31 +79,42 @@ public class Model : IUpdatable
     private void Move()
     {
         Vector2 newPosition = (Vector2)_camera.ScreenToWorldPoint(Mouse.current.position.ReadValue()) 
-                              + _movingOffset;
-        if (Mathf.Abs(newPosition.x) + _currentModel.Size.x / 2 > _borders.x)
+                              + _movingOffset; 
+        _currentModel.transform.position = GetClampedPosition(newPosition);
+    }
+
+    private Vector2 GetClampedPosition(Vector2 position)
+    {
+        if (Mathf.Abs(position.x) + _currentModel.Size.x / 2 > _borders.x)
         {
-            newPosition = new Vector2(
-                Mathf.Sign(newPosition.x) * (_borders.x - _currentModel.Size.x / 2),
-                newPosition.y);
+            position = new Vector2(
+                Mathf.Sign(position.x) * (_borders.x - _currentModel.Size.x / 2),
+                position.y);
         }
             
-        if (newPosition.y + _currentModel.Size.y > _borders.y)
+        if (position.y + _currentModel.Size.y > _borders.y)
         {
-            newPosition = new Vector2(
-                newPosition.x,
+            position = new Vector2(
+                position.x,
                 _borders.y - _currentModel.Size.y);
         }
-        else if (newPosition.y < -_borders.y)
+        else if (position.y < -_borders.y)
         {
-            newPosition = new Vector2(newPosition.x, -_borders.y);
+            position = new Vector2(position.x, -_borders.y);
         }
-            
-        _currentModel.transform.position = newPosition;
+
+        return position;
     }
 
     private void ChangeScale(float delta)
     {
-        _currentModel.transform.localScale += Vector3.one * delta * Speed;
+        delta *= Speed;
+        
+        if (_currentModel.Size.y + delta > _borders.y * 2) return;
+        if (_currentModel.Size.y + delta < _borders.y * MinimumScale) return;
+
+        _currentModel.transform.localScale += Vector3.one * delta;
+        _currentModel.transform.position = GetClampedPosition(_currentModel.transform.position);
     }
 
     private void StartMoving()
