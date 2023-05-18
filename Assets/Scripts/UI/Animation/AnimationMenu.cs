@@ -7,8 +7,8 @@ public class AnimationMenu : Submenu<AnimationData>
 
     private readonly Model _model;
     
-    public AnimationMenu(Model model, Canvas canvas, List<AnimationData> animationData) 
-        : base(canvas, AnimationMenuViewResourceName, animationData)
+    public AnimationMenu(Model model, Canvas canvas, List<AnimationData> animationData, Transform parent) 
+        : base(canvas, AnimationMenuViewResourceName, animationData, parent)
     {
         _model = model;
     }
