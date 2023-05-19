@@ -4,32 +4,46 @@ using UnityEngine.InputSystem;
 
 namespace UI
 {
-    public class Menu
+    public class Menu : MenuWithView<MenuView>
     {
         private const string MenuViewResourceName = "UI/MenuView";
         
-        private readonly InputActionMap _input;
-        private readonly MenuView _menuView;
         private readonly List<IMenu> _menus;
 
-        public Menu(InputActionMap input, Canvas canvas, List<IMenu> menus)
+        public Menu(
+            InputActionMap input,
+            Canvas canvas,
+            Model model,
+            List<ModelData> modelDatas,
+            List<AnimationData> animationDatas,
+            List<CustomizationData> customizationDatas,
+            List<CustomizationMenuData> customizationMenuDatas) : base(canvas, MenuViewResourceName)
         {
-            _input = input;
-            _input["RightMouse"].started += ChangeMenuActive;
+            Transform viewTransform = _view.transform;
+            ModelMenu modelMenu = new (model, modelDatas, canvas, viewTransform);
+            AnimationMenu animationMenu = new (model, canvas, animationDatas, viewTransform);
+            CustomizationMenu customizationMenu = new (
+                model,
+                canvas,
+                customizationMenuDatas,
+                customizationDatas,
+                viewTransform);
+            SettingsMenu settingsMenu = new SettingsMenu(canvas, viewTransform);
+
+            List<IMenu> menus = new () { modelMenu, animationMenu, customizationMenu, settingsMenu };
+            
+            input["RightMouse"].started += ChangeMenuActive;
 
             _menus = menus;
-
-            _menuView = ResourcesLoader.InstantiateLoadComponent<MenuView>(MenuViewResourceName);
-            _menuView.transform.SetParent(canvas.transform, false);
-
-            _menuView.Init(menus);
+            
+            _view.Init(menus);
         }
 
         private void ChangeMenuActive(InputAction.CallbackContext context)
         {
-            if (_menuView.IsActive)
+            if (_view.IsActive)
             {
-                _menuView.HideMenu();
+                _view.HideMenu();
 
                 foreach (IMenu menu in _menus)
                 {
@@ -40,7 +54,7 @@ namespace UI
             {
                 Vector2 mousePosition = MouseUtils.GetMousePosition();
                 
-                _menuView.ShowMenu(mousePosition);
+                _view.ShowMenu(mousePosition);
             }
         }
     }
