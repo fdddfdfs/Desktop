@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
-[CreateAssetMenu(fileName = "ModelData", menuName = "ModelData")]
-public class ModelData : ScriptableObject
+[CreateAssetMenu(fileName = "ModelData", menuName = "Data/ModelData")]
+public class ModelData : ScriptableObject, IIcon
 {
     [SerializeField] private GameObject _prefab;
     [SerializeField] private Sprite _icon;
