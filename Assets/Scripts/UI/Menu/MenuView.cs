@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using DG.Tweening;
-using TMPro.EditorUtilities;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,12 +20,26 @@ namespace UI
 
         public void Init(List<IMenu> menus)
         {
+            foreach (IMenu menu in menus)
+            {
+                menu.HideMenu();
+            }
+            
             List<Button> buttons = new (){ _pickModel, _pickClothes, _pickAnimation, _settings };
             for (var i = 0; i < buttons.Count; i++)
             {
                 int index = i;
+
                 buttons[index].onClick.AddListener(
-                    () => menus[index].ChangeMenuActive(_menu.transform.localPosition));
+                    () =>
+                    {
+                        foreach (IMenu menu in menus)
+                        {
+                            menu.HideMenu();
+                        }
+                        
+                        menus[index].ChangeMenuActive(_menu.transform.localPosition, null);
+                    });
             }
 
             _menu.SetActive(false);
