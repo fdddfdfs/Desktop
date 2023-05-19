@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -12,10 +13,13 @@ public class Model : IUpdatable
     private readonly Dictionary<ModelData, ModelView> _models;
     private readonly Vector2 _borders;
     private readonly InputAction _scroll;
+    private readonly Animator _animator;
 
     private bool _isMoving;
     private ModelView _currentModel;
     private Vector2 _movingOffset;
+
+    public ModelData CurrentModelData { get; private set; }
 
     public Model(List<ModelData> modelDatas, InputActionMap inputActionMap, Camera camera)
     {
@@ -38,6 +42,7 @@ public class Model : IUpdatable
 
         _currentModel = _models[modelDatas[0]];
         _currentModel.ChangeActive(true);
+        CurrentModelData = modelDatas[0];
 
         _borders = new Vector2(Screen.width, Screen.height);
         _borders = _camera.ScreenToWorldPoint(_borders);
@@ -59,6 +64,17 @@ public class Model : IUpdatable
         
         _currentModel.ChangeActive(false);
         _currentModel = newModelView;
+        CurrentModelData = newModel;
+    }
+
+    public void ChangeAnimation(RuntimeAnimatorController runtimeAnimatorController)
+    {
+        _currentModel.ChangeAnimation(runtimeAnimatorController);
+    }
+
+    public void ChangeCustomization(CustomizationData customizationData)
+    {
+        _currentModel.Customize(customizationData.CustomizationType, customizationData.Material);
     }
 
     public void Update()
