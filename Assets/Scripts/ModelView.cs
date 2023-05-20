@@ -7,9 +7,9 @@ public class ModelView : MonoBehaviour
     [SerializeField] private Animator _animator;
     [SerializeField] private BoxCollider _boxCollider;
     [SerializeField] private MeshRenderer _mesh;
-    [SerializeField] private List<CustomizationMaterialIndex> _customizationMaterialsIndexes;
+    [SerializeField] private List<CustomizationMesh> _customizationMeshes;
 
-    private Dictionary<CustomizationType, List<int>> _customizationMaterialsIndexesByType;
+    private Dictionary<CustomizationType, List<MeshRenderer>> _customizationMeshesByType;
 
     public Vector2 Size => _boxCollider.size * (Vector2)_boxCollider.transform.localScale;
 
@@ -25,19 +25,23 @@ public class ModelView : MonoBehaviour
 
     public void Customize(CustomizationType type, Material newMaterial)
     {
-        foreach (int index in _customizationMaterialsIndexesByType[type])
+        foreach (MeshRenderer meshRenderer in _customizationMeshesByType[type])
         {
-            _mesh.materials[index] = newMaterial;
+            meshRenderer.material = newMaterial;
         }
     }
 
     private void Awake()
     {
-        _customizationMaterialsIndexesByType = new Dictionary<CustomizationType, List<int>>();
-        foreach (CustomizationMaterialIndex customizationMaterialIndexes in _customizationMaterialsIndexes)
+        _customizationMeshesByType = new Dictionary<CustomizationType, List<MeshRenderer>>();
+        foreach (CustomizationMesh customizationMesh in _customizationMeshes)
         {
-            _customizationMaterialsIndexesByType[customizationMaterialIndexes.CustomizationType] =
-                customizationMaterialIndexes.Index;
+            if (!_customizationMeshesByType.ContainsKey(customizationMesh.CustomizationType))
+            {
+                _customizationMeshesByType[customizationMesh.CustomizationType] = new List<MeshRenderer>();
+            }
+            
+            _customizationMeshesByType[customizationMesh.CustomizationType].Add(customizationMesh.MeshRenderer);
         }
     }
 }
