@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,15 +6,18 @@ public class Model : IUpdatable
 {
     private const float Speed = 0.001f;
     private const float MinimumScale = 0.1f;
-    
+    private const float RotationSpeed = 0.5f;
+
     private readonly Camera _camera;
     private readonly LayerMask _raycastMask;
     private readonly Dictionary<ModelData, ModelView> _models;
     private readonly Vector2 _borders;
     private readonly InputAction _scroll;
     private readonly Animator _animator;
+    private readonly InputAction _mouseDelta;
 
     private bool _isMoving;
+    private bool _isRotating;
     private ModelView _currentModel;
     private Vector2 _movingOffset;
 
@@ -27,25 +29,39 @@ public class Model : IUpdatable
         _raycastMask = 1 << LayerMask.NameToLayer("Model");
 
         InputAction leftMouse = inputActionMap["LeftMouse"];
-        leftMouse.started += (_) => StartMoving();
-        leftMouse.canceled += (_) => StopMoving();
+        leftMouse.started += _ => StartMoving();
+        leftMouse.canceled += _ => StopMoving();
+
+        InputAction rightMouse = inputActionMap["RightMouse"];
+        rightMouse.started += _ => StartRotation();
+        rightMouse.canceled += _ => StopRotation();
 
         _scroll = inputActionMap["Scroll"];
-
+        _mouseDelta = inputActionMap["MouseDelta"];
+        
         _models = new Dictionary<ModelData, ModelView>();
         foreach (ModelData modelData in modelDatas)
         {
             var modelView = ResourcesLoader.InstantiateLoadedComponent<ModelView>(modelData.Prefab);
             _models[modelData] = modelView;
             modelView.ChangeActive(false);
+            modelView.BoxCollider.enabled = false;
         }
 
         _currentModel = _models[modelDatas[0]];
         _currentModel.ChangeActive(true);
+        _currentModel.BoxCollider.enabled = true;
         CurrentModelData = modelDatas[0];
 
         _borders = new Vector2(Screen.width, Screen.height);
         _borders = _camera.ScreenToWorldPoint(_borders);
+    }
+    
+    public bool IsMouseOnModel()
+    {
+        Vector2 mousePosition = Mouse.current.position.ReadValue();
+        Ray ray = _camera.ScreenPointToRay(mousePosition);
+        return Physics.Raycast(ray, out RaycastHit _, Mathf.Infinity, _raycastMask);
     }
 
     public void ChangeModel(ModelData newModel)
@@ -57,24 +73,37 @@ public class Model : IUpdatable
             Debug.LogWarning("Trying to change model to same model");
             return;
         }
-        
+
         newModelView.ChangeActive(true);
         newModelView.transform.position = _currentModel.transform.position;
         newModelView.transform.localScale = _currentModel.transform.localScale;
-        
+        newModelView.BoxCollider.enabled = true;
+
         _currentModel.ChangeActive(false);
+        _currentModel.BoxCollider.enabled = false;
         _currentModel = newModelView;
         CurrentModelData = newModel;
     }
 
-    public void ChangeAnimation(RuntimeAnimatorController runtimeAnimatorController)
+    public void ChangeAnimation(AnimationClip animationClip)
     {
-        _currentModel.ChangeAnimation(runtimeAnimatorController);
+        _currentModel.ChangeAnimation(animationClip);
     }
 
     public void ChangeCustomization(CustomizationData customizationData)
     {
+        if(customizationData is HairData hairData)
+        {
+            _currentModel.CustomizeHairs(hairData);
+            return;
+        }
+        
         _currentModel.Customize(customizationData.CustomizationType, customizationData.Material);
+    }
+
+    public void CustomizeWeight(CustomizationType type, float newWeight)
+    {
+        _currentModel.CustomizeWeight(type, newWeight);
     }
 
     public void Update()
@@ -82,6 +111,11 @@ public class Model : IUpdatable
         if (_isMoving)
         {
             Move();
+        }
+
+        if (_isRotating)
+        {
+            Rotate();
         }
 
         float scrollDeltaY = _scroll.ReadValue<Vector2>().y;
@@ -133,6 +167,12 @@ public class Model : IUpdatable
         _currentModel.transform.position = GetClampedPosition(_currentModel.transform.position);
     }
 
+    private void Rotate()
+    {
+        var mouseDelta = _mouseDelta.ReadValue<Vector2>();
+        _currentModel.ModelTransform.transform.rotation *= Quaternion.Euler(0, -mouseDelta.x * RotationSpeed, 0);
+    }
+
     private void StartMoving()
     {
         if (IsMouseOnModel())
@@ -143,15 +183,21 @@ public class Model : IUpdatable
         }
     }
 
-    private bool IsMouseOnModel()
-    {
-        Vector2 mousePosition = Mouse.current.position.ReadValue();
-        Ray ray = _camera.ScreenPointToRay(mousePosition);
-        return Physics.Raycast(ray, out RaycastHit _, Mathf.Infinity, _raycastMask);
-    }
-
     private void StopMoving()
     {
         _isMoving = false;
+    }
+
+    private void StartRotation()
+    {
+        if (IsMouseOnModel())
+        {
+            _isRotating = true;
+        }
+    }
+
+    private void StopRotation()
+    {
+        _isRotating = false;
     }
 }
