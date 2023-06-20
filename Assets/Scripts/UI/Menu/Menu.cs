@@ -9,6 +9,7 @@ namespace UI
         private const string MenuViewResourceName = "UI/MenuView";
         
         private readonly List<IMenu> _menus;
+        private readonly Model _model;
 
         public Menu(
             InputActionMap input,
@@ -35,12 +36,15 @@ namespace UI
             input["RightMouse"].started += ChangeMenuActive;
 
             _menus = menus;
+            _model = model;
             
             _view.Init(menus);
         }
 
         private void ChangeMenuActive(InputAction.CallbackContext context)
         {
+            if (_model.IsMouseOnModel()) return;
+            
             if (_view.IsActive)
             {
                 _view.HideMenu();
