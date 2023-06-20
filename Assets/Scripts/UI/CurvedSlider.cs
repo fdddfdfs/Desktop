@@ -17,18 +17,21 @@ public class CurvedSlider : MonoBehaviour
     private float _curveRadius;
     private float _currentValue;
 
+    private Transform _parent;
+
     private Action<float> _changedValue;
 
-    public void Init(Action<float> changedValue, float initialValue)
+    public void Init(Action<float> changedValue, float initialValue, Transform parent)
     {
         _changedValue = changedValue;
         SetInitialValue(initialValue);
+        _parent = parent;
     }
 
     private void Awake()
     {
         _curvedSliderHandler.Init(OnSliderValueChanged);
-        _curveRadius = (_handleParent.rect.width - _handle.rect.width) / 2;
+        _curveRadius = (_handleParent.rect.width - _handle.rect.width) / 2.1f;
     }
 
     private void SetInitialValue(float value)
@@ -38,11 +41,16 @@ public class CurvedSlider : MonoBehaviour
             + _fillImageRestriction.x;
 
         _fillImage.fillAmount = normalizedFillValue;
+
+        _handle.anchoredPosition =
+            CalculatePositionByAngle(value * (_angleRestriction.y - _angleRestriction.x) + _angleRestriction.x);
     }
 
     private void OnSliderValueChanged(Vector2 value)
     {
+        value -= (Vector2)_parent.transform.localPosition;
         value = value.normalized;
+        value = transform.InverseTransformDirection(value);
         value = new Vector2(
             Mathf.Clamp(value.x, _xRestriction.x, _xRestriction.y),
             Mathf.Clamp(value.y, _yRestriction.x, _yRestriction.y));
@@ -52,14 +60,8 @@ public class CurvedSlider : MonoBehaviour
         float angle;
         angle = Mathf.Atan(value.x / value.y) * Mathf.Rad2Deg;
         angle = Mathf.Clamp(angle, _angleRestriction.x, _angleRestriction.y);
-        
-        float x = Mathf.Sin(angle * Mathf.Deg2Rad) * _curveRadius;
-        float y = Mathf.Cos(angle * Mathf.Deg2Rad) * _curveRadius;
 
-        Vector2 position;
-        position = new Vector2(x, y);
-
-        _handle.anchoredPosition = position;
+        _handle.anchoredPosition = CalculatePositionByAngle(angle);
 
         float normalizedAngle = (angle - _angleRestriction.x) / (_angleRestriction.y - _angleRestriction.x);
         float normalizedFillValue =
@@ -69,5 +71,13 @@ public class CurvedSlider : MonoBehaviour
         _fillImage.fillAmount = normalizedFillValue;
         
         _changedValue?.Invoke(normalizedAngle);
+    }
+
+    private Vector2 CalculatePositionByAngle(float angle)
+    {
+        float x = Mathf.Sin(angle * Mathf.Deg2Rad) * _curveRadius;
+        float y = Mathf.Cos(angle * Mathf.Deg2Rad) * _curveRadius;
+        
+        return new Vector2(x, y);
     }
 }
