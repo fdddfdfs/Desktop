@@ -43,4 +43,9 @@ public abstract class Submenu<TData> : MenuWithView<SubmenuView<TData>>, IMenu
 
         _currentData = buttonData;
     }
+
+    public void SetCurrentData(TData data)
+    {
+        _currentData = data;
+    }
 }
