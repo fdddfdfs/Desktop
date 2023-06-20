@@ -17,6 +17,6 @@ public class AnimationMenu : Submenu<AnimationData>
     {
         base.ButtonClicked(buttonIndex, buttonData);
         
-        _model.ChangeAnimation(buttonData.AnimatorController);
+        _model.ChangeAnimation(buttonData.AnimationClip);
     }
 }
