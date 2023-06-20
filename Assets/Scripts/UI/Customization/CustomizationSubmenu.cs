@@ -35,6 +35,7 @@ public class CustomizationSubmenu : Submenu<CustomizationData>
         
 
         CustomizationData current = _currentDatas[modelData][customizationType];
+        SetCurrentData(current);
         var counter = 0;
         for (var i = 0; i < data.Count; i++)
         {
