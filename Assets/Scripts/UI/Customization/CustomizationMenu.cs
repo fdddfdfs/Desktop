@@ -54,6 +54,8 @@ public class CustomizationMenu : Submenu<CustomizationMenuData>
         {
             _view.ChangeButton(i, data[i]);
         }
+
+        (_view as CustomizationMenuView)?.Init(model);
     }
     
     public override void ButtonClicked(int buttonIndex, CustomizationMenuData buttonData)
