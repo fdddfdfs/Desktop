@@ -5,8 +5,10 @@ using UnityEngine;
 public class CustomizationMesh
 {
     [SerializeField] private CustomizationType _customizationType;
-    [SerializeField] private MeshRenderer _meshRenderer;
+    [SerializeField] private SkinnedMeshRenderer _meshRenderer;
+    [SerializeField] private int _index;
 
     public CustomizationType CustomizationType => _customizationType;
-    public MeshRenderer MeshRenderer => _meshRenderer;
+    public SkinnedMeshRenderer MeshRenderer => _meshRenderer;
+    public int Index => _index;
 }
