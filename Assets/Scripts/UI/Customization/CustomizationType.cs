@@ -1,7 +1,10 @@
 ﻿public enum CustomizationType
 {
-    Hairs,
+    Hairs1,
+    Hairs2,
+    Hairs3,
     Down,
     Top,
-    Eye,
+    TopBody,
+    DownBody,
 }
