@@ -1,56 +1,112 @@
 ﻿using System;
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace UI
+public class MenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
-    public class MenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    private const float ScaleDuration = 0.5f;
+    private const float ScaleFactor = 1.2f;
+        
+    [SerializeField] private RectTransform _button;
+
+    [SerializeField] private List<MenuButton> _connectedElements;
+
+    private Vector2 _startPosition;
+
+    private bool _connectedTriggerBlock;
+
+    private float _scaleFactorForConnected = ScaleFactor;
+    private float _decreaseScaleForConnected = 1;
+
+    private float _scaleFactor = ScaleFactor;
+    private float _decreaseScale = 1;
+
+    public void InitConnectedElements(List<MenuButton> connectedElements)
     {
-        private const float ScaleDuration = 0.5f;
-        private const float ScaleFactor = 1.2f;
-        
-        [SerializeField] private RectTransform _button;
+        _connectedElements = connectedElements;
+    }
 
-        private Vector2 _startPosition;
+    public void SetScaleForConnected(float scaleFactor, float decreaseScale = 1)
+    {
+        _scaleFactorForConnected = scaleFactor;
+        _decreaseScaleForConnected = decreaseScale;
+    }
+
+    public void SetScale(float scaleFactor = ScaleFactor, float decreaseScale = 1)
+    {
+        _scaleFactor = scaleFactor;
+        _decreaseScale = decreaseScale;
+    }
         
-        public void OnPointerEnter(PointerEventData eventData)
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        IncreaseSize(true, _scaleFactor);
+    }
+        
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        DecreaseSize(true, _decreaseScale);
+    }
+
+    public void ChangeConnectedTriggerBlock(bool isBlocked)
+    {
+        _connectedTriggerBlock = isBlocked;
+    }
+        
+    private void IncreaseSize(bool triggerConnected, float scaleFactor = ScaleFactor)
+    {
+        _button.DOKill();
+        _button.DOScale(scaleFactor, ScaleDuration);
+        _button.DOLocalMove(_startPosition * scaleFactor, ScaleDuration);
+
+        if (_connectedElements == null || !triggerConnected || _connectedTriggerBlock) return;
+        
+        foreach (MenuButton connectedElement in _connectedElements)
         {
-            IncreaseSize();
+            connectedElement.IncreaseSize(false, _scaleFactorForConnected);
         }
+    }
+
+    private void DecreaseSize(bool triggerConnected, float scaleFactor = 1)
+    {
+        _button.DOKill();
+        _button.DOScale(scaleFactor, ScaleDuration);
+        _button.DOLocalMove(_startPosition, ScaleDuration);
+
+        if (_connectedElements == null || !triggerConnected || _connectedTriggerBlock) return;
         
-        public void OnPointerExit(PointerEventData eventData)
+        foreach (MenuButton connectedElement in _connectedElements)
         {
-            DecreaseSize();
+            connectedElement.DecreaseSize(false, _decreaseScaleForConnected);
+        }
+    }
+
+    public void SynchronizeWithConnected()
+    {
+        if (_connectedElements == null || _connectedElements.Count == 0)
+        {
+            throw new Exception("Must have connected elements");
         }
 
-        private void Awake()
+        _button.DOKill();
+        _button.DOScale(_connectedElements[0].transform.localScale.x, ScaleDuration);
+        _button.DOLocalMove(_connectedElements[0]._startPosition, ScaleDuration);
+    }
+
+    private void Awake()
+    {
+        if (!_button)
         {
+            _button = GetComponent<RectTransform>();
+
             if (!_button)
             {
-                _button = GetComponent<RectTransform>();
-
-                if (!_button)
-                {
-                    throw new Exception("Cannot find RectTransform component");
-                }
+                throw new Exception("Cannot find RectTransform component");
             }
-
-            _startPosition = _button.transform.localPosition;
         }
 
-        private void IncreaseSize()
-        {
-            _button.DOKill();
-            _button.DOScale(ScaleFactor, ScaleDuration);
-            _button.DOLocalMove(_startPosition * ScaleFactor, ScaleDuration);
-        }
-
-        private void DecreaseSize()
-        {
-            _button.DOKill();
-            _button.DOScale(1, ScaleDuration);
-            _button.DOLocalMove(_startPosition, ScaleDuration);
-        }
+        _startPosition = _button.transform.localPosition;
     }
 }

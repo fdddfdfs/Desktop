@@ -10,8 +10,8 @@ public class ModelMenu : Submenu<ModelData>
 
     private ModelData _currentModel;
 
-    public ModelMenu(Model model, List<ModelData> modelDatas, Canvas canvas, Transform parent) 
-        : base(canvas, ModelMenuViewResourceName, modelDatas, parent)
+    public ModelMenu(Model model, List<ModelData> modelDatas, Canvas canvas, Transform parent, GameConfig gameConfig) 
+        : base(canvas, ModelMenuViewResourceName, modelDatas, parent, gameConfig)
     {
         _model = model;
     }
@@ -21,5 +21,7 @@ public class ModelMenu : Submenu<ModelData>
         base.ButtonClicked(buttonIndex, buttonData);
 
         _model.ChangeModel(buttonData);
+        
+        Achievements.Instance.GetAchievement(buttonData.AchievementData);
     }
 }

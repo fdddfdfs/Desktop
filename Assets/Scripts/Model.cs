@@ -20,6 +20,8 @@ public class Model : IUpdatable
     private bool _isRotating;
     private ModelView _currentModel;
     private Vector2 _movingOffset;
+    private AnimationClip _currentClip;
+    private float _currentAnimationSpeed;
 
     public ModelData CurrentModelData { get; private set; }
 
@@ -52,7 +54,9 @@ public class Model : IUpdatable
         _currentModel.ChangeActive(true);
         _currentModel.BoxCollider.enabled = true;
         CurrentModelData = modelDatas[0];
-
+        Achievements.Instance.GetAchievement(modelDatas[0].AchievementData);
+        Rotate();
+        
         _borders = new Vector2(Screen.width, Screen.height);
         _borders = _camera.ScreenToWorldPoint(_borders);
     }
@@ -79,15 +83,21 @@ public class Model : IUpdatable
         newModelView.transform.localScale = _currentModel.transform.localScale;
         newModelView.BoxCollider.enabled = true;
 
+        float animationNormalizedTime = _currentModel.GetCurrentAnimationNormalizedTime();
+        newModelView.ChangeAnimation(_currentClip, animationNormalizedTime);
+        
         _currentModel.ChangeActive(false);
         _currentModel.BoxCollider.enabled = false;
         _currentModel = newModelView;
         CurrentModelData = newModel;
+        Rotate();
+        _currentModel.ChangeAnimationSpeed(_currentAnimationSpeed);
     }
 
     public void ChangeAnimation(AnimationClip animationClip)
     {
         _currentModel.ChangeAnimation(animationClip);
+        _currentClip = animationClip;
     }
 
     public void ChangeCustomization(CustomizationData customizationData)
@@ -104,6 +114,12 @@ public class Model : IUpdatable
     public void CustomizeWeight(CustomizationType type, float newWeight)
     {
         _currentModel.CustomizeWeight(type, newWeight);
+    }
+
+    public void ChangeAnimationSpeed(float speed)
+    {
+        _currentModel.ChangeAnimationSpeed(speed);
+        _currentAnimationSpeed = speed;
     }
 
     public void Update()
@@ -171,6 +187,10 @@ public class Model : IUpdatable
     {
         var mouseDelta = _mouseDelta.ReadValue<Vector2>();
         _currentModel.ModelTransform.transform.rotation *= Quaternion.Euler(0, -mouseDelta.x * RotationSpeed, 0);
+
+        _currentModel.ChangeHairsBoneGravity(_currentModel.ModelTransform.rotation * 
+                                             Quaternion.Euler(0,180,0) *
+                                             CurrentModelData.HairsBoneGravity);
     }
 
     private void StartMoving()

@@ -18,8 +18,9 @@ public class CustomizationMenu : Submenu<CustomizationMenuData>
         Canvas canvas,
         List<CustomizationMenuData> data, 
         List<CustomizationData> customizationDatas,
-        Transform parent) 
-        : base(canvas, CustomizationMenuResourceName, null, parent)
+        Transform parent,
+        GameConfig gameConfig) 
+        : base(canvas, CustomizationMenuResourceName, null, parent, gameConfig)
     {
         _model = model;
 
@@ -48,7 +49,8 @@ public class CustomizationMenu : Submenu<CustomizationMenuData>
             canvas,
             CustomizationSubmenuResourceName,
             _customizationData[_model.CurrentModelData][CustomizationType.Top],
-            _view.transform);
+            _view.transform,
+            gameConfig);
 
         for (var i = 0; i < data.Count; i++)
         {
@@ -82,6 +84,8 @@ public class CustomizationMenu : Submenu<CustomizationMenuData>
         }
         
         _currentMenu = buttonIndex;
+        
+        Sounds.Instance.PlaySound(0, "Click");
     }
 
     public override void HideMenu()

@@ -31,7 +31,7 @@ public class CurvedSlider : MonoBehaviour
     private void Awake()
     {
         _curvedSliderHandler.Init(OnSliderValueChanged);
-        _curveRadius = (_handleParent.rect.width - _handle.rect.width) / 2.1f;
+        _curveRadius = (_handleParent.rect.width - _handle.rect.width) / 2.05f;
     }
 
     private void SetInitialValue(float value)
@@ -57,11 +57,10 @@ public class CurvedSlider : MonoBehaviour
 
         if (value == Vector2.zero) return;
 
-        float angle;
-        angle = Mathf.Atan(value.x / value.y) * Mathf.Rad2Deg;
+        float angle = Mathf.Atan(value.x / value.y) * Mathf.Rad2Deg;
         angle = Mathf.Clamp(angle, _angleRestriction.x, _angleRestriction.y);
 
-        _handle.anchoredPosition = CalculatePositionByAngle(angle);
+        _handle.localPosition = CalculatePositionByAngle(angle);
 
         float normalizedAngle = (angle - _angleRestriction.x) / (_angleRestriction.y - _angleRestriction.x);
         float normalizedFillValue =

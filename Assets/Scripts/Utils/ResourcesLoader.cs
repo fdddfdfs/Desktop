@@ -30,6 +30,14 @@ public static class ResourcesLoader
         return loadedObject;
     }
     
+    public static T LoadMenuView<T>(Transform parent, string menuViewResourceName) where T: MonoBehaviour
+    {
+        var view = InstantiateLoadComponent<T>(menuViewResourceName);
+        view.transform.SetParent(parent, false);
+
+        return view;
+    }
+    
     private static T GetComponent<T>(GameObject loadedObject) where T: MonoBehaviour
     {
         var component = loadedObject.GetComponent<T>();
@@ -37,7 +45,7 @@ public static class ResourcesLoader
         if (!component)
         {
             throw new Exception(
-                $"{loadedObject.name} resource should contain {nameof(T)} component");
+                $"{loadedObject.name} resource should contain {typeof(T).FullName} component");
         }
 
         return component;

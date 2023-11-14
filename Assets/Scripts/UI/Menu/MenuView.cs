@@ -39,6 +39,7 @@ namespace UI
                         }
                         
                         menus[index].ChangeMenuActive(_menu.transform.localPosition, null);
+                        Sounds.Instance.PlaySound(0, "Click");
                     });
             }
 

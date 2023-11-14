@@ -4,8 +4,10 @@ using UnityEngine.EventSystems;
 
 public class CurvedSliderHandler : MonoBehaviour, IDragHandler
 {
-    private Action<Vector2> _onDrag;
+    private readonly Vector2 _offsetVector = new (Screen.width / 2f, Screen.height / 2f);
     
+    private Action<Vector2> _onDrag;
+
     public void Init(Action<Vector2> onDrag)
     {
         _onDrag = onDrag;

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace UI
 {
@@ -10,6 +11,12 @@ namespace UI
         
         private readonly List<IMenu> _menus;
         private readonly Model _model;
+        private readonly EntryText _entryText;
+        
+        private bool _isActivatingWindow;
+        private SettingsMenu _settingsMenu;
+
+        public GraphicRaycaster LanguageDropdownRaycaster => _settingsMenu.LanguageDropdownRaycaster;
 
         public Menu(
             InputActionMap input,
@@ -17,34 +24,56 @@ namespace UI
             Model model,
             List<ModelData> modelDatas,
             List<AnimationData> animationDatas,
+            List<AnimationMenuData> animationMenuDatas,
             List<CustomizationData> customizationDatas,
-            List<CustomizationMenuData> customizationMenuDatas) : base(canvas, MenuViewResourceName)
+            List<CustomizationMenuData> customizationMenuDatas,
+            GameConfig gameConfig,
+            EntryText entryText) : base(canvas, MenuViewResourceName)
         {
             Transform viewTransform = _view.transform;
-            ModelMenu modelMenu = new (model, modelDatas, canvas, viewTransform);
-            AnimationMenu animationMenu = new (model, canvas, animationDatas, viewTransform);
+            ModelMenu modelMenu = new (model, modelDatas, canvas, viewTransform, gameConfig);
+            AnimationMenu animationMenu = new (
+                model,
+                canvas,
+                animationMenuDatas,
+                animationDatas,
+                viewTransform,
+                gameConfig);
             CustomizationMenu customizationMenu = new (
                 model,
                 canvas,
                 customizationMenuDatas,
                 customizationDatas,
-                viewTransform);
-            SettingsMenu settingsMenu = new SettingsMenu(canvas, viewTransform);
+                viewTransform,
+                gameConfig);
+            _settingsMenu = new SettingsMenu(canvas, viewTransform);
 
-            List<IMenu> menus = new () { modelMenu, animationMenu, customizationMenu, settingsMenu };
+            List<IMenu> menus = new () { modelMenu, animationMenu, customizationMenu, _settingsMenu };
             
             input["RightMouse"].started += ChangeMenuActive;
+            InputAction activatingWindow = input["ActiveWindow"];
+            activatingWindow.started += (_) =>
+            {
+                _isActivatingWindow = true;
+            };
+            activatingWindow.canceled += (_) =>
+            {
+                _isActivatingWindow = false;
+            };
 
             _menus = menus;
             _model = model;
+            _entryText = entryText;
             
             _view.Init(menus);
         }
 
-        private void ChangeMenuActive(InputAction.CallbackContext context)
+        public void ChangeMenuActive(InputAction.CallbackContext context)
         {
-            if (_model.IsMouseOnModel()) return;
+            if (!_isActivatingWindow || !_model.IsMouseOnModel()) return;
             
+            _entryText.HideText();
+
             if (_view.IsActive)
             {
                 _view.HideMenu();
@@ -57,8 +86,9 @@ namespace UI
             else
             {
                 Vector2 mousePosition = MouseUtils.GetMousePosition();
-                
-                _view.ShowMenu(mousePosition);
+                Vector2 menuPosition = new (Screen.width / 4f * -Mathf.Sign(mousePosition.x), 0);
+
+                _view.ShowMenu(menuPosition);
             }
         }
     }

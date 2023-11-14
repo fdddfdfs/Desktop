@@ -5,8 +5,10 @@ public class CustomizationSubmenu : Submenu<CustomizationData>
 {
     private readonly Model _model;
     
-    private Dictionary<ModelData, Dictionary<CustomizationType, CustomizationData>> _currentDatas;
+    private readonly Dictionary<ModelData, Dictionary<CustomizationType, CustomizationData>> _currentDatas;
 
+    private readonly CustomizationSubmenuView _customizationMenuView;
+    
     public bool IsActive => _view.IsActive;
 
     public CustomizationSubmenu(
@@ -14,11 +16,14 @@ public class CustomizationSubmenu : Submenu<CustomizationData>
         Canvas canvas,
         string menuViewResourceName,
         List<CustomizationData> data,
-        Transform parent) 
-        : base(canvas, menuViewResourceName, data, parent)
+        Transform parent,
+        GameConfig gameConfig) 
+        : base(canvas, menuViewResourceName, data, parent, gameConfig)
     {
         _currentDatas = new Dictionary<ModelData, Dictionary<CustomizationType, CustomizationData>>();
         _model = model;
+
+        _customizationMenuView = _view as CustomizationSubmenuView;
     }
 
     public void SetButtons(ModelData modelData, CustomizationType customizationType, List<CustomizationData> data)
@@ -32,7 +37,6 @@ public class CustomizationSubmenu : Submenu<CustomizationData>
         {
             _currentDatas[modelData][customizationType] = data[0];
         }
-        
 
         CustomizationData current = _currentDatas[modelData][customizationType];
         SetCurrentData(current);
@@ -44,6 +48,8 @@ public class CustomizationSubmenu : Submenu<CustomizationData>
             _view.ChangeButton(counter, data[i]);
             counter++;
         }
+        
+        _customizationMenuView.ChangeDLCLockersActive((customizationType & CustomizationType.Hairs) == 0);
     }
 
     public override void ButtonClicked(int buttonIndex, CustomizationData buttonData)

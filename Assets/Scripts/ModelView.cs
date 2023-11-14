@@ -4,16 +4,20 @@ using UnityEngine;
 public class ModelView : MonoBehaviour
 {
     private const string ResetTriggerName = "Reset";
+    private const string SpeedMultiplierName = "Speed";
     
     [SerializeField] private GameObject _model;
     [SerializeField] private Animator _animator;
     [SerializeField] private BoxCollider _boxCollider;
     [SerializeField] private List<CustomizationMesh> _customizationMeshes;
+    [SerializeField] private DynamicBone _hairsBone;
 
     private readonly int _resetTriggerHash = Animator.StringToHash(ResetTriggerName);
+    private readonly int _speedMultiplierHash = Animator.StringToHash(SpeedMultiplierName);
 
     private AnimatorOverrideController _animatorOverrideController;
     private string _defaultClipName;
+    private int _defaultStateName;
 
     private Dictionary<CustomizationType, List<CustomizationMesh>> _customizationMeshesByType;
 
@@ -23,15 +27,27 @@ public class ModelView : MonoBehaviour
 
     public BoxCollider BoxCollider => _boxCollider;
 
+    public float GetCurrentAnimationNormalizedTime()
+    {
+        return _animator.GetCurrentAnimatorStateInfo(0).normalizedTime;
+    }
+
     public void ChangeActive(bool active)
     {
         _model.SetActive(active);
     }
 
-    public void ChangeAnimation(AnimationClip animationClip)
+    public void ChangeAnimation(AnimationClip animationClip, float normalizedTime = 0)
     {
         _animatorOverrideController[_defaultClipName] = animationClip;
-        _animator.SetTrigger(_resetTriggerHash);
+        if (normalizedTime == 0)
+        {
+            _animator.SetTrigger(_resetTriggerHash);
+        }
+        else
+        {
+            _animator.Play(_defaultStateName, 0, normalizedTime);
+        }
     }
 
     public void Customize(CustomizationType type, Material newMaterial)
@@ -88,6 +104,16 @@ public class ModelView : MonoBehaviour
         }
     }
 
+    public void ChangeHairsBoneGravity(Vector3 newGravity)
+    {
+        _hairsBone.m_Gravity = newGravity;
+    }
+
+    public void ChangeAnimationSpeed(float speed)
+    {
+        _animator.SetFloat(_speedMultiplierHash, speed);
+    }
+
     private void Awake()
     {
         _customizationMeshesByType = new Dictionary<CustomizationType, List<CustomizationMesh>>();
@@ -104,7 +130,9 @@ public class ModelView : MonoBehaviour
         _animatorOverrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
         _animator.runtimeAnimatorController = _animatorOverrideController;
         _defaultClipName = _animator.GetCurrentAnimatorClipInfo(0)[0].clip.name;
+        _defaultStateName = _animator.GetCurrentAnimatorStateInfo(0).shortNameHash;
 
         _animator.applyRootMotion = false;
+        _animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
     }
 }

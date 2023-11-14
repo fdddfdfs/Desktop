@@ -7,10 +7,15 @@ public abstract class Submenu<TData> : MenuWithView<SubmenuView<TData>>, IMenu
 {
     private TData _currentData;
 
-    protected Submenu(Canvas canvas, string menuViewResourceName, List<TData> data, Transform parent) 
+    protected Submenu(
+        Canvas canvas,
+        string menuViewResourceName,
+        List<TData> data,
+        Transform parent,
+        GameConfig gameConfig) 
         : base(canvas, menuViewResourceName)
     {
-        _view.Init(this);
+        _view.Init(this, gameConfig);
         
         if (parent)
         {
@@ -42,6 +47,8 @@ public abstract class Submenu<TData> : MenuWithView<SubmenuView<TData>>, IMenu
         _view.ChangeButton(buttonIndex, _currentData);
 
         _currentData = buttonData;
+        
+        Sounds.Instance.PlaySound(0, "Click");
     }
 
     protected void SetCurrentData(TData data)

@@ -1,9 +1,12 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SettingsMenu: MenuWithView<SettingsMenuView>, IMenu
 {
     private const string SettingsMenuViewResourceName = "UI/SettingsMenuView";
+
+    public GraphicRaycaster LanguageDropdownRaycaster => _view.LanguageDropdownRaycaster;
     
     public SettingsMenu(Canvas canvas, Transform parent) : base(canvas, SettingsMenuViewResourceName)
     {

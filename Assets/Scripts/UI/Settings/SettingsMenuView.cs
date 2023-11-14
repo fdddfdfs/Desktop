@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Xml.Schema;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,30 +12,39 @@ public class SettingsMenuView : AnimatedMenuView
     [SerializeField] private TMP_Text _soundsHeader;
     [SerializeField] private CurvedSlider _soundsSlider;
     [SerializeField] private TMP_Text _soundsValue;
-    [SerializeField] private TMP_Text _languageHeader;
     [SerializeField] private TMP_Dropdown _languageDropdown;
     [SerializeField] private List<LanguageData> _languageData;
     [SerializeField] private Button _exitButton;
+    [SerializeField] private TMP_Text _exitText;
     
     private List<Languages.Language> _languages;
     private int _currentQuality;
 
     private SettingsMenu _settingsMenu;
 
+    public GraphicRaycaster LanguageDropdownRaycaster => !_languageDropdown.gameObject.activeInHierarchy 
+            ? null 
+            : _languageDropdown.GetComponentInChildren<GraphicRaycaster>();
+
     public void Init(SettingsMenu settingsMenu)
     {
+        _menu.SetActive(false);
+        
         _settingsMenu = settingsMenu;
-    }
-
-    private void Awake()
-    {
+        
         float musicVolume = SettingsStorage.MusicVolume.Value;
         UpdateMusicVolume(musicVolume);
-        _musicSlider.Init(UpdateMusicVolume, SettingsStorage.MusicVolume.Value);
+        _musicSlider.Init(UpdateMusicVolume, SettingsStorage.MusicVolume.Value, _menu.transform);
         
         float soundVolume = SettingsStorage.SoundVolume.Value;
-        UpdateSoundsVolume(soundVolume);
-        _soundsSlider.Init(UpdateSoundsVolume, SettingsStorage.SoundVolume.Value);
+        UpdateSoundsVolume(soundVolume,false);
+        _soundsSlider.Init(
+            (value) =>
+            {
+                UpdateSoundsVolume(value, false);
+            },
+            SettingsStorage.SoundVolume.Value,
+            _menu.transform);
 
         _languages = new List<Languages.Language>();
         List<TMP_Dropdown.OptionData> languagesOptions = new();
@@ -51,6 +61,8 @@ public class SettingsMenuView : AnimatedMenuView
         _languageDropdown.Show();
         _languageDropdown.value = _languages.FindIndex(
             language => (int)language == SettingsStorage.Localization.Value);
+        
+        _exitButton.onClick.AddListener(Exit);
     }
 
     private void OnEnable()
@@ -72,7 +84,7 @@ public class SettingsMenuView : AnimatedMenuView
     {
         _musicHeader.text = Localization.Instance[AllTexts.Music];
         _soundsHeader.text = Localization.Instance[AllTexts.Sounds];
-        _languageHeader.text = Localization.Instance[AllTexts.Language];
+        _exitText.text = Localization.Instance[AllTexts.Exit];
     }
 
     private void UpdateMusicVolume(float newVolume)
@@ -81,14 +93,23 @@ public class SettingsMenuView : AnimatedMenuView
         _settingsMenu.MusicVolumeUpdated(newVolume);
     }
 
-    private void UpdateSoundsVolume(float newVolume)
+    private void UpdateSoundsVolume(float newVolume, bool playSound)
     {
         _soundsValue.text = ((int)(newVolume * 100)).ToString();
         _settingsMenu.SoundsVolumeUpdated(newVolume);
+        if (playSound)
+        {
+            Sounds.Instance.PlaySound(1, "Girl");
+        }
     }
 
     private void UpdateLanguage(int index)
     {
         _settingsMenu.LanguageUpdated(_languages[index]);
+    }
+
+    private void Exit()
+    {
+        Application.Quit();
     }
 }

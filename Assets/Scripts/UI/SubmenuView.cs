@@ -6,18 +6,23 @@ using UnityEngine.UI;
 public class SubmenuView<TData> : AnimatedMenuView where TData: ScriptableObject, IIcon
 {
     [SerializeField] protected List<Button> _buttons;
-    
+    [SerializeField] protected List<Image> _lockers;
     [SerializeField] private List<Image> _buttonsImages;
 
+    protected GameConfig _gameConfig;
+    
     private Submenu<TData> _submenu;
     private List<TData> _data;
 
     public Vector2 Position => _menu.transform.localPosition;
 
-    public void Init(Submenu<TData> submenu)
+    public int Count => _buttons.Count;
+
+    public virtual void Init(Submenu<TData> submenu, GameConfig gameConfig)
     {
         HideMenu(null);
         _submenu = submenu;
+        _gameConfig = gameConfig;
         
         _data = new List<TData>();
         for (var i = 0; i < _buttons.Count; i++)
